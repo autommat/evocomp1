@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<params>
+    <CXPB>0.5</CXPB>
+    <MUTPB>0.02</MUTPB>
+    <POP_SIZE>30</POP_SIZE>
+    <NGEN>100</NGEN>
+    <MUTATION mu="0.0" sigma="0.2">mutGaussian</MUTATION>
+    <ALGORITHM>SGA</ALGORITHM>
+</params>
