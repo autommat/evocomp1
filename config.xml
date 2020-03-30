@@ -5,12 +5,13 @@
     <POP_SIZE>30</POP_SIZE>
     <NGEN>100</NGEN>
     <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>
-<!--    todo: add second mutation method-->
-<!--    <MUTATION></MUTATION>-->
-<!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
+    <!--    <MUTATION indpb="0.05">mutShuffleIndexes</MUTATION>-->
     <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>
+    <!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
     <ALGORITHM>eaSimple</ALGORITHM>
-<!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
+    <!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
+<!--    <FUNCTION>sin_times_cos</FUNCTION>-->
+    <FUNCTION>sin_times_cos_plus_sum</FUNCTION>
     <RANGE>
         <MIN>-10</MIN>
         <MAX>10</MAX>

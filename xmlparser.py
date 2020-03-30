@@ -22,6 +22,7 @@ class XmlParser():
             config_dict["NGEN"] = int(self.root.find('NGEN').text)
             config_dict["MIN"] = float(self.root.find('RANGE').find('MIN').text)
             config_dict["MAX"] = float(self.root.find('RANGE').find('MAX').text)
+            config_dict["FUNCTION"] = self.root.find('FUNCTION').text
             mutation = {}
             mutation["name"] = self.root.find('MUTATION').text
             for attr, val in self.root.find('MUTATION').attrib.items():

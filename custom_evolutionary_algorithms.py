@@ -1,3 +1,5 @@
+from random import random
+
 from deap import tools
 
 

@@ -1,6 +1,8 @@
 import math
 
 # definicje funkcji przystosowania do optymalizacji
+
+# tylko do testów
 def sum_of_squares(individual):
     x1 = individual[0]
     x2 = individual[1]
@@ -13,7 +15,7 @@ def sin_times_cos(individual):
     y = math.sin(x1)*math.cos(x2)
     return y,
 
-def sin_times_cos_plus_x1_plus_x2(individual):
+def sin_times_cos_plus_sum(individual):
     x1 = individual[0]
     x2 = individual[1]
     y = math.sin(x1)*math.cos(x2)+x1+x2
