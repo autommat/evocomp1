@@ -4,9 +4,13 @@
     <MUTPB>0.02</MUTPB>
     <POP_SIZE>30</POP_SIZE>
     <NGEN>100</NGEN>
-    <MUTATION mu="0.0" sigma="0.2">mutGaussian</MUTATION>
-    <ALGORITHM>Simple</ALGORITHM>
-<!--    <ALGORITHM>MuPlusLambda</ALGORITHM>-->
+    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>
+<!--    todo: add second mutation method-->
+<!--    <MUTATION></MUTATION>-->
+<!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
+    <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>
+    <ALGORITHM>eaSimple</ALGORITHM>
+<!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
     <RANGE>
         <MIN>-10</MIN>
         <MAX>10</MAX>

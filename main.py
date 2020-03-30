@@ -1,27 +1,26 @@
 import random
-import xml.etree.ElementTree as ET
+from os.path import exists
 import numpy
 from deap import base, algorithms
 from deap import creator
 from deap import tools
+from custom_evolutionary_algorithms import main
 from functions import *
-
-
-#function-dependent todo: usunąć ograniczenia lub wczytać z config_dict
-X_MIN, X_MAX = -10., 10.
+import matplotlib.pyplot as plt
+from xmlparser import XmlParser, XmlParserError
 
 
 def prepare_toolbox(config_dict):
-    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMax)
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
 
     toolbox = base.Toolbox()
 
-    toolbox.register("attr_float", random.uniform, X_MIN, X_MAX)
+    # typ i zakres genu osobnika
+    toolbox.register("attr_float", random.uniform, config_dict["MIN"], config_dict["MAX"])
 
     # osobnik to lista attr_float o długości 2
-    toolbox.register("individual", tools.initRepeat, creator.Individual,
-                     toolbox.attr_float, 2)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_float, 2)
 
     # populacja to lista osobników
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
@@ -29,15 +28,27 @@ def prepare_toolbox(config_dict):
     # wybór funkcji przystosowania #todo: wybór funkcji przystosowania na podstawie config_dict
     toolbox.register("evaluate", sin_times_cos)
 
-    # 2 SPOSOBY KRZYŻOWANIA: dwupunktowe i równomierne todo: wybór metody na podstawie config_dict
-    # wybór metody krzyżowania
-    # toolbox.register("mate", tools.cxTwoPoint)
-    toolbox.register("mate", tools.cxUniform, indpb=0.05)
+    #todo: dodać funkcję kary
 
-    # 2 SPOSOBY MUTACJI todo: wybór metody na podstawie config_dict
+    # wybór metody krzyżowania
+    if config_dict["CROSSOVER"]["name"] == "cxTwoPoint":
+        toolbox.register("mate", tools.cxTwoPoint)
+    elif config_dict["CROSSOVER"]["name"] == "cxUniform":
+        indpb = config_dict["CROSSOVER"]["indpb"]
+        toolbox.register("mate", tools.cxUniform, indpb=indpb)
+    else:
+        raise NotImplementedError
+
+    #wybór metody mutacji
     # indpb prawdopodobieństwo mutacji atrybutu/genu
-    # toolbox.register("mutate", tools.mutFlipBit, indpb=0.05) #todo: dodać metodę mutacji inną niż flipbit
-    toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.2, indpb=0.2)
+    # toolbox.register("mutate", tools.mutFlipBit, indpb=0.05) #todo: dodać metodę mutacji (nie flip bit)
+    if config_dict["MUTATION"]["name"] == "mutGaussian":
+        mu = config_dict["MUTATION"]["mu"]
+        sigma = config_dict["MUTATION"]["sigma"]
+        indpb = config_dict["MUTATION"]["indpb"]
+        toolbox.register("mutate", tools.mutGaussian, mu=mu, sigma=sigma, indpb=indpb)
+    else:
+        raise NotImplementedError
 
     # wybór metody selekcji
     toolbox.register("select", tools.selTournament, tournsize=2)
@@ -45,136 +56,45 @@ def prepare_toolbox(config_dict):
     return toolbox
 
 
-def main(config_dict, toolbox):
-    best_individuals = []
-
-    #populacja o rozmiarze POP_SIZE
-    pop = toolbox.population(n=config_dict['POP_SIZE'])
-
-
-
-    print("Początek ewolucji")
-
-    # Evaluate the entire population
-    fitnesses = list(map(toolbox.evaluate, pop))
-    for ind, fit in zip(pop, fitnesses):
-        ind.fitness.values = fit
-
-    print(f"liczebność pierwszej populacji: {len(pop)}")
-
-    # Extracting all the fitnesses of
-    fits = [ind.fitness.values[0] for ind in pop]
-
-    # numer pokolenia
-    generation = 0
-
-    # Begin the evolution
-    # while max(fits) < 100 and generation < NGEN:
-    while generation < config_dict["NGEN"]:
-
-        generation = generation + 1
-        print(f"Pokolenie {generation}")
-
-        # selekcja
-        offspring = toolbox.select(pop, len(pop))
-
-
-        #klonowanie osobników przed krzyżowaniem i mutacją
-        #https://deap.readthedocs.io/en/master/tutorials/basic/part2.html#mutation
-        offspring = list(map(toolbox.clone, offspring))
-
-        # krzyżowanie
-        for child1, child2 in zip(offspring[::2], offspring[1::2]):
-
-            # cross two individuals with probability CXPB
-            if random.random() < config_dict["CXPB"]:
-                toolbox.mate(child1, child2)
-
-                # fitness values of the children
-                # must be recalculated later
-                del child1.fitness.values
-                del child2.fitness.values
-        #mutacja
-        for mutant in offspring:
-
-            # mutate an individual with probability MUTPB
-            if random.random() < config_dict["MUTPB"]:
-                toolbox.mutate(mutant)
-                del mutant.fitness.values
-
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
-
-        print("  Evaluated %i individuals" % len(invalid_ind))
-
-        # The population is entirely replaced by the offspring
-        pop[:] = offspring
-
-        # Gather all the fitnesses in one list and print the stats
-        fits = [ind.fitness.values[0] for ind in pop]
-
-
-        best_ind = tools.selBest(pop, 1)
-        best_individuals.append(best_ind) #todo: add also the eval
-
-    print("Koniec ewolucji")
-
-    #wybór najlepszego osobnika z końcowej pupulacji
-    best_ind = tools.selBest(pop, 1)[0]
-    print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
-
-    print(best_individuals)
-
-
-def prepare_statistics(): #todo: wyświetlić najlepszego osobnika matpplotlib.pyplot
+def prepare_statistics():
     stats = tools.Statistics(key=lambda ind: ind.fitness.values)
-    stats.register("max", numpy.max)
+    stats.register("min", numpy.min)
     return stats
 
 
 if __name__ == "__main__":
     try:
-        doc =ET.parse("config.xml")
-        root = doc.getroot()
+        config_filename = input("Wpisz nazwę pliku konfiguracyjnego lub pomiń aby użyć config.xml")
+        if not exists(config_filename):
+            input("Nie znaleziono podanego pliku konfiguracyjnego. Zostanie użyty config.xml")
+            config_filename = "config.xml"
 
-        algorithm = root.find('ALGORITHM').text
+        parser = XmlParser(config_filename)
+        config_dict = parser.get_config_dict()
 
-        config_dict={}
-        config_dict["CXPB"] = float(root.find('CXPB').text)
-        config_dict["MUTPB"] = float(root.find('MUTPB').text)
-        config_dict["POP_SIZE"] = int(root.find('POP_SIZE').text)
-        config_dict["NGEN"] = int(root.find('NGEN').text)
-        config_dict["MIN"] = float(root.find('RANGE').find('MIN').text)
-        config_dict["MAX"] = float(root.find('RANGE').find('MAX').text)
-        mutation ={}
-        mutation["name"] = root.find('MUTATION').text
-        for attr, val in root.find('MUTATION').attrib.items():
-            mutation[attr] = val
-        config_dict["MUTATION"] = mutation
         toolbox = prepare_toolbox(config_dict)
-
-        pop = toolbox.population(n=config_dict['POP_SIZE'])
         stats = prepare_statistics()
 
+
+        init_pop = toolbox.population(n=config_dict['POP_SIZE'])
+        algorithm = config_dict["ALGORITHM"]
+
         rpop, logbook = None, None
-        if algorithm == "Simple":
-            rpop, logbook = algorithms.eaSimple(pop, toolbox, config_dict['CXPB'], config_dict['MUTPB'], config_dict['NGEN'], stats=stats)
-        elif algorithm == "MuPlusLambda":
+
+        if algorithm == "eaSimple":
+            rpop, logbook = algorithms.eaSimple(init_pop, toolbox, config_dict['CXPB'], config_dict['MUTPB'], config_dict['NGEN'], stats=stats)
+        elif algorithm == "eaMuPlusLambda":
             mu = 20
-            lambda_=7*mu
-            rpop, logbook = algorithms.eaMuPlusLambda(pop, toolbox, mu, lambda_, config_dict['CXPB'], config_dict['MUTPB'], config_dict['NGEN'], stats=stats)
-        elif algorithm == "CustomSimple":    #todo:usunąć jeśli niepotrzebne
-            main(config_dict, toolbox)
+            lambda_ = 7*mu
+            rpop, logbook = algorithms.eaMuPlusLambda(init_pop, toolbox, mu, lambda_, config_dict['CXPB'], config_dict['MUTPB'], config_dict['NGEN'], stats=stats)
+        # elif algorithm == "CustomSimple":
+        #     main(config_dict, toolbox)
         else:
             print(f"algorytm o nazwie {algorithm} nie jest obsługiwany")
 
-        gen = logbook.select("gen")
-        fit_max = logbook.chapters["fitness"].select("max") #todo: wyświetlić matplotlib.pyplot
+        min_ = logbook.select("min")
+        plt.plot(min_)
+        plt.show()
 
-    except ET.ParseError:
-        print("dokument xml jest źle sformatowany")
-    except AttributeError:
-        print("dokument xml ma nieprawidłowe elementy")
+    except XmlParserError as xpe:
+        print("wystąpił błąd podczas parsowania dokumentu konfiguracyjnego")

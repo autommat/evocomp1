@@ -1,6 +1,6 @@
 import math
 
-# definicja funkcji przystosowania do optymalizacji
+# definicje funkcji przystosowania do optymalizacji
 def sum_of_squares(individual):
     x1 = individual[0]
     x2 = individual[1]
