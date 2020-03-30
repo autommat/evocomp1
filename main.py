@@ -76,7 +76,7 @@ def prepare_toolbox(config_dict):
         indpb = config_dict["MUTATION"]["indpb"]
         toolbox.register("mutate", tools.mutGaussian, mu=mu, sigma=sigma, indpb=indpb)
     elif config_dict["MUTATION"]["name"] == "mutShuffleIndexes":
-        toolbox.register("mutate", tools.mutGaussian, indpb=indpb)
+        toolbox.register("mutate", tools.mutShuffleIndexes, indpb=indpb)
     else:
         raise NotImplementedError
 

@@ -4,12 +4,12 @@
     <MUTPB>0.02</MUTPB>
     <POP_SIZE>30</POP_SIZE>
     <NGEN>100</NGEN>
-    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>
-    <!--    <MUTATION indpb="0.05">mutShuffleIndexes</MUTATION>-->
+<!--    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>-->
+    <MUTATION indpb="0.05">mutShuffleIndexes</MUTATION>
     <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>
-    <!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
+<!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
     <ALGORITHM>eaSimple</ALGORITHM>
-    <!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
+<!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
 <!--    <FUNCTION>sin_times_cos</FUNCTION>-->
     <FUNCTION>sin_times_cos_plus_sum</FUNCTION>
     <RANGE>
