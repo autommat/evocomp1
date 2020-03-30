@@ -5,5 +5,10 @@
     <POP_SIZE>30</POP_SIZE>
     <NGEN>100</NGEN>
     <MUTATION mu="0.0" sigma="0.2">mutGaussian</MUTATION>
-    <ALGORITHM>SGA</ALGORITHM>
+    <ALGORITHM>Simple</ALGORITHM>
+<!--    <ALGORITHM>MuPlusLambda</ALGORITHM>-->
+    <RANGE>
+        <MIN>-10</MIN>
+        <MAX>10</MAX>
+    </RANGE>
 </params>
