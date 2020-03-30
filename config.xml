@@ -6,8 +6,8 @@
     <NGEN>100</NGEN>
 <!--    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>-->
     <MUTATION indpb="0.05">mutShuffleIndexes</MUTATION>
-    <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>
-<!--    <CROSSOVER>cxTwoPoint</CROSSOVER>-->
+<!--    <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>-->
+    <CROSSOVER>cxTwoPoint</CROSSOVER>
     <ALGORITHM>eaSimple</ALGORITHM>
 <!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
 <!--    <FUNCTION>sin_times_cos</FUNCTION>-->
