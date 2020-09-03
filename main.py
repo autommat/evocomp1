@@ -13,7 +13,7 @@ import pandas as pd
 
 POP_SIZE = 20
 CXPB = 0.2
-MUTPB = 0.01
+MUTPB = 0.5
 NGEN = 100
 NCLUSTERS=3
 NSAMPLES=210
@@ -61,13 +61,41 @@ class Dataset:
             clusters[min_dist_index].append(item_index)
         # print(clusters)
 
-        return -1,
+        sum_d_value = 0.
+
+        for i in range(NCLUSTERS):      #todo compute clusters number
+            sum_d_value += self.calcDvalue(clusters, centroids)
+        davies_bouldin = sum_d_value/NCLUSTERS
+        return davies_bouldin,
 
     def dist(self, center_coords:list, point_coords:list):
         dist = ((center_coords[0]-point_coords[0])**2 + (center_coords[1]-point_coords[1])**2)**0.5
         for cent_c, point_c in zip(center_coords[2:], point_coords[2:]):
             dist = (dist**2 + (cent_c-point_c)**2 )**0.5
         return dist
+
+    def calcDvalue(self, clusters: map, centroids: list):
+        maxR = 0 #todo: make sure if negative is possible
+        for index1, cluster1 in enumerate(clusters):
+            for index2, cluster2 in enumerate(clusters):
+                if index1 != index2:
+                    M = self.dist(centroids[index1], centroids[index2])
+                    S1 = self.calcSvalue(centroids[index1], clusters[index1])
+                    S2 = self.calcSvalue(centroids[index2], clusters[index2])
+                    R = (S1+S2) / M
+                    if R>maxR:
+                        maxR = R
+        return maxR
+
+    def calcSvalue(self, centroid, cluster):
+        if len(cluster) == 0:
+            return 0.
+        for index in cluster:
+            total_dist = 0.
+            point_coords = self.df.iloc[index]
+            # point_coords = self.df.iloc[index].tolist()
+            total_dist += self.dist(centroid, point_coords)
+        return total_dist / len(cluster)
 
 def prepare_toolbox(dataset: Dataset):
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -122,7 +150,7 @@ def prepare_toolbox(dataset: Dataset):
 
     #wybór metody mutacji
     # indpb prawdopodobieństwo mutacji atrybutu/genu
-    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.1, indpb=0.2)
+    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.05, indpb=0.2)
     # toolbox.register("mutate", tools.mutUniformInt, low=0, up=NSAMPLES, indpb=0.2)
 
     # wybór metody selekcji
@@ -147,9 +175,9 @@ if __name__ == "__main__":
 
     init_pop = toolbox.population(POP_SIZE)
 
-
-    rpop, logbook = algorithms.eaSimple(init_pop, toolbox, CXPB, MUTPB, NGEN, stats=stats)
-
+    hof = tools.HallOfFame(1)
+    rpop, logbook = algorithms.eaSimple(init_pop, toolbox, CXPB, MUTPB, NGEN, stats=stats, halloffame=hof)
+    print(hof[0])
 
     min_ = logbook.select("min")
     plt.plot(min_)
