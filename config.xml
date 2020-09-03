@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <params>
-    <CXPB>0.5</CXPB>
-    <MUTPB>0.02</MUTPB>
-    <POP_SIZE>30</POP_SIZE>
+    <CXPB>0.2</CXPB>
+    <MUTPB>0.6</MUTPB>
+    <POP_SIZE>50</POP_SIZE>
     <NGEN>100</NGEN>
-<!--    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>-->
-    <MUTATION indpb="0.05">mutShuffleIndexes</MUTATION>
-<!--    <CROSSOVER indpb="0.05">cxUniform</CROSSOVER>-->
+    <MUTATION mu="0.0" sigma="0.2" indpb="0.2">mutGaussian</MUTATION>
+<!--    <MUTATION indpb="0.5">mutShuffleIndexes</MUTATION>-->
+<!--    <CROSSOVER indpb="0.5">cxUniform</CROSSOVER>-->
     <CROSSOVER>cxTwoPoint</CROSSOVER>
     <ALGORITHM>eaSimple</ALGORITHM>
 <!--    <ALGORITHM>eaMuPlusLambda</ALGORITHM>-->
 <!--    <FUNCTION>sin_times_cos</FUNCTION>-->
     <FUNCTION>sin_times_cos_plus_sum</FUNCTION>
     <RANGE>
-        <MIN>-10</MIN>
-        <MAX>10</MAX>
+        <MIN>-100</MIN>
+        <MAX>100</MAX>
     </RANGE>
 </params>
