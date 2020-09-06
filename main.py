@@ -13,33 +13,31 @@ import pandas as pd
 POP_SIZE = 25
 CXPB = 0.2
 MUTPB = 0.5
-NGEN = 50
-
-NCLUSTERS=3
-NSAMPLES=210
+NGEN = 100
+NCLUSTERS=5
 
 class Dataset:
-    def __init__(self):
-        # self.df_raw = pd.read_csv('res/seeds_dataset.csv', header=None,
-        #                  names=["area", "perimeter", "compactness", "length of kernel", "width of kernel",
-        #                         "asymmetry coefficient", "length of kernel groove", "type"])
-        # self.df = self.df_raw.drop(columns=['type'])
-        self.df_raw = pd.read_csv('res/normalizedSeeds.csv', header=None,
-                         names=["index","area", "perimeter", "compactness", "length of kernel", "width of kernel",
-                                "asymmetry coefficient", "length of kernel groove"])
-        self.df = self.df_raw.drop(columns=['index'])
-        self.ncolumns = len(self.df.columns)
+    def __init__(self, df):
+        self.df=df
+        self.ncolumns = len(df.columns)
 
     def evaluate(self, individual):
         centroids = [individual[x:x + self.ncolumns] for x in range(0, len(individual), self.ncolumns)]
         clusters = self.individual_to_clusters(individual)
 
-        sum_d_value = 0.
+        empt=0
+        for k,v in clusters.items():
+            if len(v)==0:
+                empt+=1
+
+        if (NCLUSTERS - empt)<2:
+            return 100.,
 
         # for i in range(NCLUSTERS):
         #     sum_d_value += self.calcDvalue(clusters, centroids)
         # davies_bouldin = sum_d_value/NCLUSTERS
-        davies_bouldin = self.calcDvalue(clusters, centroids)
+        d_val = self.calcDvalue(clusters, centroids)
+        davies_bouldin = d_val/(NCLUSTERS-empt)
 
         return davies_bouldin,
 
@@ -74,8 +72,9 @@ class Dataset:
 
     def calcDvalue(self, clusters: map, centroids: list):
         s_cache = {x: None for x in clusters.keys()}
-        maxR = 0
+        sumR =0.
         for index1, cluster1 in enumerate(clusters):
+            maxR = 0.
             for index2, cluster2 in enumerate(clusters):
                 if index1 != index2:
                     M = self.dist(centroids[index1], centroids[index2])
@@ -84,11 +83,16 @@ class Dataset:
                     if s_cache[index2] is None:
                         s_cache[index2] = self.calcSvalue(centroids[index2], clusters[index2])
                     S1 = s_cache[index1]
+                    if S1==0:
+                        continue
                     S2 = s_cache[index2]
+                    if S2==0:
+                        continue
                     R = (S1+S2) / M
                     if R>maxR:
                         maxR = R
-        return maxR
+            sumR+=maxR
+        return sumR
 
     def calcSvalue(self, centroid, cluster):
         if len(cluster) == 0:
@@ -193,11 +197,17 @@ def prepare_statistics():
 
 if __name__ == "__main__":
     random.seed(1)
-    dataset = Dataset()
+
+    df_seeds = pd.read_csv('res/normalizedSeeds.csv', header=None,
+                                 names=["index","area", "perimeter", "compactness", "length of kernel", "width of kernel",
+                                        "asymmetry coefficient", "length of kernel groove"]).drop(columns=['index'])
+    df_iris=pd.read_csv('res/normalizedIris.csv', header=None,
+                names=["index", "sepal length", "sepal width", "petal length",
+                       "petal width"]).drop(columns=['index'])
+    dataset = Dataset(df_iris)
 
     toolbox = prepare_toolbox(dataset)
     stats = prepare_statistics()
-
 
     init_pop = toolbox.population(POP_SIZE)
 
@@ -211,17 +221,18 @@ if __name__ == "__main__":
     plt.plot(min_)
     plt.show()
 
+    colors = ['red', 'green', 'blue', 'orange', 'purple']
     index_to_cluster = [None]*len(dataset.df.index)
     for clust_num, item_num_list in best_clusters.items():
         for item_num in item_num_list:
-            index_to_cluster[item_num] = clust_num
+            index_to_cluster[item_num] = colors[clust_num]
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(dataset.df.iloc[:,0], dataset.df.iloc[:, 1], dataset.df.iloc[:,2], c=index_to_cluster)
     for clust in range(NCLUSTERS):
         i = clust*dataset.ncolumns
-        ax.scatter(best_indiv[i+0], best_indiv[i+1], best_indiv[i+2], marker='^', c=0)
+        ax.scatter(best_indiv[i+0], best_indiv[i+1], best_indiv[i+2], marker='x', c=colors[clust])
     plt.show()
     # plt.scatter(dataset.df.iloc[:, 2], dataset.df.iloc[:, 4], c=index_to_cluster)
     # plt.show()
