@@ -1,14 +1,11 @@
 import random
-from os.path import exists
+
+import matplotlib.pyplot as plt
 import numpy
+import pandas as pd
 from deap import base, algorithms
 from deap import creator
 from deap import tools
-from custom_evolutionary_algorithms import main
-from functions import *
-import matplotlib.pyplot as plt
-from xmlparser import XmlParser, XmlParserError
-import pandas as pd
 
 POP_SIZE = 25
 CXPB = 0.2
@@ -30,12 +27,9 @@ class Dataset:
             if len(v)==0:
                 empt+=1
 
-        if (NCLUSTERS - empt)<2:
+        if (NCLUSTERS - empt)<2: #niedozwolony podział na mniej niż 2 klastry
             return 100.,
 
-        # for i in range(NCLUSTERS):
-        #     sum_d_value += self.calcDvalue(clusters, centroids)
-        # davies_bouldin = sum_d_value/NCLUSTERS
         d_val = self.calcDvalue(clusters, centroids)
         davies_bouldin = d_val/(NCLUSTERS-empt)
 
@@ -44,7 +38,6 @@ class Dataset:
     def individual_to_clusters(self, individual):
         clusters = {ncluster:[] for ncluster in range(NCLUSTERS)}
         centroids = [individual[x:x + self.ncolumns] for x in range(0, len(individual), self.ncolumns)]
-        # print(centroids)
 
         for item_index, row in self.df.iterrows():
             point_coords = row.tolist()
@@ -136,16 +129,9 @@ def prepare_toolbox(dataset: Dataset):
     toolbox = base.Toolbox()
 
     # typ i zakres genu osobnika
-    # toolbox.register("attr_float", random.uniform, 0., 1.)
     rand_initialier = RandInitializer(NCLUSTERS, dataset.ncolumns, min=0., max=1.)
     toolbox.register("attr_float", rand_initialier.get_rand_val)
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_float, NCLUSTERS*dataset.ncolumns)
-
-    # toolbox.register("indices", random.sample, range(210), 210)
-    # toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
-
-    # toolbox.register("attr_int", random.randint, 0, NSAMPLES)
-    # toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.attr_int, 4)
 
 
     # populacja to lista osobników
@@ -180,7 +166,6 @@ def prepare_toolbox(dataset: Dataset):
     # wybór metody krzyżowania
     toolbox.register("mate", tools.cxUniform, indpb=0.2)
 
-
     #wybór metody mutacji
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.05, indpb=0.3)
 
@@ -196,14 +181,14 @@ def prepare_statistics():
     return stats
 
 if __name__ == "__main__":
-    random.seed(1)
+    random.seed(0)
 
     df_seeds = pd.read_csv('res/normalizedSeeds.csv', header=None,
-                                 names=["index","area", "perimeter", "compactness", "length of kernel", "width of kernel",
-                                        "asymmetry coefficient", "length of kernel groove"]).drop(columns=['index'])
+                           names=["index","area", "perimeter", "compactness", "length of kernel", "width of kernel",
+                                  "asymmetry coefficient", "length of kernel groove"]).drop(columns=['index'])
     df_iris=pd.read_csv('res/normalizedIris.csv', header=None,
-                names=["index", "sepal length", "sepal width", "petal length",
-                       "petal width"]).drop(columns=['index'])
+                        names=["index", "sepal length", "sepal width", "petal length",
+                               "petal width"]).drop(columns=['index'])
     dataset = Dataset(df_iris)
 
     toolbox = prepare_toolbox(dataset)
@@ -215,6 +200,7 @@ if __name__ == "__main__":
     rpop, logbook = algorithms.eaSimple(init_pop, toolbox, CXPB, MUTPB, NGEN, stats=stats, halloffame=elite)
     best_clusters = dataset.individual_to_clusters(elite[0])
     best_indiv = elite[0]
+    print("clusters determined by the best individual:")
     print(best_clusters)
 
     min_ = logbook.select("min")
@@ -227,12 +213,13 @@ if __name__ == "__main__":
         for item_num in item_num_list:
             index_to_cluster[item_num] = colors[clust_num]
 
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(dataset.df.iloc[:,0], dataset.df.iloc[:, 1], dataset.df.iloc[:,2], c=index_to_cluster)
+    # ax.scatter(dataset.df.iloc[:,4], dataset.df.iloc[:, 5], dataset.df.iloc[:,6], c=index_to_cluster) #seeds
+    ax.scatter(dataset.df.iloc[:, 0], dataset.df.iloc[:, 1], dataset.df.iloc[:,2], c=index_to_cluster) #iris
     for clust in range(NCLUSTERS):
         i = clust*dataset.ncolumns
-        ax.scatter(best_indiv[i+0], best_indiv[i+1], best_indiv[i+2], marker='x', c=colors[clust])
+        # ax.scatter(best_indiv[i+4], best_indiv[i+5], best_indiv[i+6], marker='x', c=colors[clust]) #seeds
+        ax.scatter(best_indiv[i+0], best_indiv[i+1], best_indiv[i+2], marker='x', c=colors[clust]) #iris
     plt.show()
-    # plt.scatter(dataset.df.iloc[:, 2], dataset.df.iloc[:, 4], c=index_to_cluster)
-    # plt.show()
